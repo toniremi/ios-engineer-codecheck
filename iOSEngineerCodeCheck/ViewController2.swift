@@ -21,38 +21,62 @@ class ViewController2: UIViewController {
     @IBOutlet weak var forksLabel: UILabel!
     @IBOutlet weak var issuesLabel: UILabel!
 
-    var vc1: ViewController!
+    // instead of holding the whole vc1 reference only the data needed
+    var selectedRepository: [String: Any]? // Holds the dictionary for the selected repo
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let repo = vc1.repo[vc1.idx]
+        // use guard let to safely unwrap the selected repository data
+        guard let repository = selectedRepository else {
+            print("Error: selectedRepository was not set.")
+            return
+        }
 
-        languageLabel.text = "Written in \(repo["language"] as? String ?? "")"
-        stargacersLabel.text = "\(repo["stargazers_count"] as? Int ?? 0) stars"
-        watchersLabel.text = "\(repo["watchers_count"] as? Int ?? 0) watchers"
-        forksLabel.text = "\(repo["forks_count"] as? Int ?? 0) forks"
-        issuesLabel.text = "\(repo["open_issues_count"] as? Int ?? 0) open issues"
+        languageLabel.text = "Written in \(repository["language"] as? String ?? "")"
+        stargacersLabel.text = "\(repository["stargazers_count"] as? Int ?? 0) stars"
+        watchersLabel.text = "\(repository["watchers_count"] as? Int ?? 0) watchers"
+        forksLabel.text = "\(repository["forks_count"] as? Int ?? 0) forks"
+        issuesLabel.text = "\(repository["open_issues_count"] as? Int ?? 0) open issues"
         getImage()
 
     }
 
     func getImage() {
 
-        let repo = vc1.repo[vc1.idx]
-
-        titleLabel.text = repo["full_name"] as? String
-
-        if let owner = repo["owner"] as? [String: Any] {
-            if let imgURL = owner["avatar_url"] as? String {
-                URLSession.shared.dataTask(with: URL(string: imgURL)!) { (data, _, _) in
-                    let img = UIImage(data: data!)!
-                    DispatchQueue.main.async {
-                        self.imageView.image = img
-                    }
-                }.resume()
-            }
+        // use guard let to safely unwrap the selected repository and the data fields needed
+        guard let repository = selectedRepository,
+              let owner = repository["owner"] as? [String: Any],
+              let imgURLString = owner["avatar_url"] as? String,
+              let imageURL = URL(string: imgURLString) else {
+            print("Error: Could not retrieve image URL from repository data in getImage().")
+            return
         }
+
+        // set the repository title
+        titleLabel.text = repository["full_name"] as? String ?? ""
+
+        // user URLSession to fetch avatar
+        URLSession.shared.dataTask(with: imageURL) { [weak self] (data, _, error) in
+            if let error = error {
+                print("Network Error fetching image: \(error.localizedDescription)")
+                return
+            }
+
+            guard let data = data else {
+                print("Error: No image data received.")
+                return
+            }
+
+            guard let img = UIImage(data: data) else {
+                print("Error: Could not create UIImage from data.")
+                return
+            }
+
+            DispatchQueue.main.async {
+                self?.imageView.image = img
+            }
+        }.resume()
 
     }
 

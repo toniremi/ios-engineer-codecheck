@@ -9,33 +9,33 @@
 import UIKit
 
 class ViewController: UITableViewController, UISearchBarDelegate {
-    
+
     @IBOutlet weak var searchBar: UISearchBar!
-    
+
     var repo: [[String: Any]]=[]
-    
+
     var task: URLSessionTask?
     var word: String!
     var url: String!
     var idx: Int!
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         searchBar.text = "GitHubのリポジトリを検索できるよー"
         searchBar.delegate = self
     }
-    
+
     func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
         // ↓こうすれば初期のテキストを消せる
         searchBar.text = ""
         return true
     }
-    
+
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         task?.cancel()
     }
-    
+
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         // Safely unwrap searchBar.text. If nil or empty, don't proceed with search.
         // Also, use 'isEmpty' for checking empty strings, which is more Swift-idiomatic than 'count != 0'.
@@ -61,7 +61,7 @@ class ViewController: UITableViewController, UISearchBarDelegate {
         // Cancel any ongoing task before starting a new one
         task?.cancel()
 
-        task = URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
+        task = URLSession.shared.dataTask(with: url) { [weak self] (data, _, error) in
             // Handle network errors first
             if let error = error {
                 print("Network Error: \(error.localizedDescription)")
@@ -95,37 +95,37 @@ class ViewController: UITableViewController, UISearchBarDelegate {
         }
         task?.resume()
     }
-    
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
-        if segue.identifier == "Detail"{
+
+        if segue.identifier == "Detail" {
             if let detailsViewController = segue.destination as? ViewController2 {
                 detailsViewController.vc1 = self
             }
         }
-        
+
     }
-    
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return repo.count
     }
-    
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
+
         let cell = UITableViewCell()
-        let rp = repo[indexPath.row]
-        cell.textLabel?.text = rp["full_name"] as? String ?? ""
-        cell.detailTextLabel?.text = rp["language"] as? String ?? ""
+        let repository = repo[indexPath.row]
+        cell.textLabel?.text = repository["full_name"] as? String ?? ""
+        cell.detailTextLabel?.text = repository["language"] as? String ?? ""
         cell.tag = indexPath.row
         return cell
-        
+
     }
-    
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         // 画面遷移時に呼ばれる
         idx = indexPath.row
         performSegue(withIdentifier: "Detail", sender: self)
-        
+
     }
-    
+
 }

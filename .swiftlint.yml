@@ -13,10 +13,6 @@ excluded:
 # included:
 #   - iOSEngineerCodeCheck # Lint only the main source folder
 
-# Lint only files with the .swift extension in the specified directories
-analyzer_excluded:
-  - Pods
-
 # You can also customize rules here. For now, let's just focus on exclusions.
 # For example, to disable the 'force_cast' rule:
 # disabled_rules:

@@ -321,7 +321,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/SwiftLint/swiftlint\"\n";
+			shellScript = "# Run SwiftLint with autocorrect enabled (--fix)\n\"${PODS_ROOT}/SwiftLint/swiftlint\" --fix\n\n# Then, run SwiftLint again to report any remaining non-autocorrectable issues\n\"${PODS_ROOT}/SwiftLint/swiftlint\"\n";
 		};
 		6953350C27B56A9D21E27A47 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

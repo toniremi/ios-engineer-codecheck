@@ -15,9 +15,7 @@ class ViewController: UITableViewController, UISearchBarDelegate {
     var repo: [[String: Any]]=[]
 
     var task: URLSessionTask?
-    var word: String!
-    var url: String!
-    var idx: Int!
+    var idx: Int?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,9 +42,6 @@ class ViewController: UITableViewController, UISearchBarDelegate {
             print("Search bar text is empty or nil. Not performing search.")
             return
         }
-
-        // Assign 'word' to self.word (if self.word is still a stored property)
-        self.word = word // This line only needed if 'self.word' is still used elsewhere as a stored property.
 
         // Construct the URL string.
         // No force unwrap needed for 'word' here as it's already unwrapped by the guard statement.
@@ -100,7 +95,12 @@ class ViewController: UITableViewController, UISearchBarDelegate {
 
         if segue.identifier == "Detail" {
             if let detailsViewController = segue.destination as? ViewController2 {
-                detailsViewController.vc1 = self
+                // pass the selected repository
+                if let selectedIndex = idx, repo.indices.contains(selectedIndex) {
+                    detailsViewController.selectedRepository = repo[selectedIndex]
+                } else {
+                    print("Error: Invalid index or repository data not available for segue.")
+                }
             }
         }
 

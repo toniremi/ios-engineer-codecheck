@@ -14,7 +14,7 @@ enum APIError: Error, LocalizedError, Equatable {
     case networkError(Error) // Original network errors from URLSession
     case httpError(Int) // Generic HTTP error with status code
     case unauthorized(message: String?) // Specific for 401, with optional message from API
-    case apiError(statusCode: Int, message: String) // For other non-2xx errors with an API message
+    case apiError(GitHubAPIErrorResponse) // more complete GithubAPI Error response
     case decodingError(Error) // For JSON decoding failures
     case unknownError // For unknown errors
     case invalidResponse // For invalid response ie: data is corrupt, data is empty, etc.
@@ -46,9 +46,24 @@ enum APIError: Error, LocalizedError, Equatable {
             }
             return "Authentication failed (401 Unauthorized)." +
             " Please ensure your Personal Access Token (PAT) is correct and has the necessary permissions."
-        case .apiError(let statusCode, let message):
+        case .apiError(let errorResponse):
             // For other API-specific errors with a message
-            return "GitHub API Error (\(statusCode)): \(message). Please try again."
+            var description = "GitHub API Error (\(errorResponse.status ?? "N/A")): \(errorResponse.message)"
+
+            // Append detailed errors if available
+            if let errors = errorResponse.errors, !errors.isEmpty {
+                let detailedErrorMessages = errors.compactMap { detail -> String? in
+                    var detailParts: [String] = []
+                    if let resource = detail.resource { detailParts.append("Resource: \(resource)") }
+                    if let field = detail.field { detailParts.append("Field: \(field)") }
+                    if let code = detail.code { detailParts.append("Code: \(code)") }
+                    if let message = detail.message { detailParts.append("Message: \(message)") }
+                    return detailParts.joined(separator: ", ")
+                }
+                description += "\nDetails:\n- " + detailedErrorMessages.joined(separator: "\n- ")
+            }
+
+            return description
         case .decodingError(let error):
             // Detailed message for decoding errors (useful for development, can be more generic for user)
             return "Failed to process data from the server. \(error.localizedDescription)"
@@ -72,8 +87,8 @@ enum APIError: Error, LocalizedError, Equatable {
             return lhsCode == rhsCode
         case (.unauthorized(let lhsMessage), .unauthorized(let rhsMessage)):
             return lhsMessage == rhsMessage
-        case (.apiError(let lhsStatusCode, let lhsMessage), .apiError(let rhsStatusCode, let rhsMessage)):
-            return lhsStatusCode == rhsStatusCode && lhsMessage == rhsMessage
+        case (.apiError(let lerrResponse), .apiError(let rerrResponse)):
+            return lerrResponse == rerrResponse
         case (.decodingError(let lhsError), .decodingError(let rhsError)):
             // For decoding errors, also compare localized descriptions
             return lhsError.localizedDescription == rhsError.localizedDescription
@@ -91,7 +106,7 @@ class GitHubAPIService: GitHubAPIServiceProtocol {
 
     // to enable debug to print the raw response
     // useful when making changes to models and facing decode errors
-    var isDebugMode: Bool = false
+    internal var isDebugMode: Bool = false
 
     // Add a session property for testability
     private let session: URLSession
@@ -102,6 +117,11 @@ class GitHubAPIService: GitHubAPIServiceProtocol {
     // Add an initializer that accepts a URLSession, defaulting to .shared
     init(session: URLSession = .shared) {
         self.session = session
+    }
+
+    // setter to enable/disabled debug mode
+    func setDebugMode(enabled: Bool) {
+        self.isDebugMode = enabled
     }
 
     /// Generic function to make authenticated GitHub API requests
@@ -139,6 +159,11 @@ class GitHubAPIService: GitHubAPIServiceProtocol {
 
         // MARK: - Debugging: Print Raw JSON Response
         if isDebugMode {
+
+            print("--- HTTP Response ---")
+            print(httpResponse)
+            print("-------------------------")
+
             if let jsonString = String(data: data, encoding: .utf8) {
                 print("--- Raw JSON Response ---")
                 print(jsonString)
@@ -167,7 +192,7 @@ class GitHubAPIService: GitHubAPIServiceProtocol {
                     throw APIError.unauthorized(message: apiErrorResponse.message)
                 } else {
                     // Other non-2xx status codes that have a message
-                    throw APIError.apiError(statusCode: statusCode, message: apiErrorResponse.message)
+                    throw APIError.apiError(apiErrorResponse)
                 }
             } catch let decodingError as DecodingError {
                 // If we couldn't decode a GitHubAPIErrorResponse, it might be a generic HTTP error
@@ -242,19 +267,32 @@ class GitHubAPIService: GitHubAPIServiceProtocol {
 
         // Use a Task to wrap the asynchronous operation so it can be cancelled
         currentSearchTask = Task {
-            // prepare our query string
-            let urlString = "https://api.github.com/search/repositories?q=\(query)"
+            // Use URLComponents for robust URL construction
+            guard var urlComponents = URLComponents(string: "https://api.github.com/search/repositories") else {
+                throw APIError.invalidURL // This would catch issues with the base URL string
+            }
 
-            guard let url = URL(string: urlString) else {
+            urlComponents.queryItems = [
+                URLQueryItem(name: "q", value: query)
+            ]
+
+            guard let url = urlComponents.url else {
+                // This would catch scenarios where urlComponents cannot form a valid URL from its parts
                 throw APIError.invalidURL
             }
 
             return try await performRequest(url: url)
         }
 
+        // Directly await the task's value. If the task throws, this await will re-throw.
+        guard let task = currentSearchTask else {
+            // This case should ideally not be hit immediately after assigning a Task,
+            // but as a safeguard, it indicates an unexpected state.
+            throw APIError.unknownError
+        }
+
         do {
-            return try await currentSearchTask?.value ??
-            GitHubSearchResponse(totalCount: 0, incompleteResults: false, items: [])
+            return try await task.value
         } catch {
             // Re-throw if it's not a cancellation error
             if (error as? CocoaError)?.code == CocoaError.Code.userCancelled {

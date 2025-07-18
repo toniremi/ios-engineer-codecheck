@@ -10,6 +10,8 @@ import Foundation
 import UIKit
 
 protocol GitHubAPIServiceProtocol {
+    var isDebugMode: Bool { get }
+    func setDebugMode(enabled: Bool)
     func searchRepositories(query: String) async throws -> GitHubSearchResponse
     func fetchImage(from url: URL) async throws -> UIImage
     func cancelCurrentSearch()

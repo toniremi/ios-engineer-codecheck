@@ -12,7 +12,6 @@
 		2AE385B72E2752DF00907B37 /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE385B62E2752DC00907B37 /* ModelTests.swift */; };
 		8E115B537D5C3C45EA099B36 /* Pods_iOSEngineerCodeCheck_iOSEngineerCodeCheckUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4547B903861067960267C1B /* Pods_iOSEngineerCodeCheck_iOSEngineerCodeCheckUITests.framework */; };
 		A0209EDECE224D1ED1A27C33 /* Pods_iOSEngineerCodeCheckTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6183B0E2F24E48956EFF8032 /* Pods_iOSEngineerCodeCheckTests.framework */; };
-		BFD945E8244DC5EB0012785A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFD945E7244DC5EB0012785A /* Assets.xcassets */; };
 		BFD945F6244DC5EB0012785A /* iOSEngineerCodeCheckTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD945F5244DC5EB0012785A /* iOSEngineerCodeCheckTests.swift */; };
 		BFD94601244DC5EC0012785A /* iOSEngineerCodeCheckUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD94600244DC5EC0012785A /* iOSEngineerCodeCheckUITests.swift */; };
 		FDB60DA9179AF09BFAFE7A4D /* Pods_iOSEngineerCodeCheck.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BBF6A83058B9B35B9B105C5 /* Pods_iOSEngineerCodeCheck.framework */; };
@@ -50,7 +49,6 @@
 		AB36A583BBDFAC63B17DB4AB /* Pods-iOSEngineerCodeCheck.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iOSEngineerCodeCheck.release.xcconfig"; path = "Target Support Files/Pods-iOSEngineerCodeCheck/Pods-iOSEngineerCodeCheck.release.xcconfig"; sourceTree = "<group>"; };
 		BA63A88E510BCA1AD489AC8E /* Pods-iOSEngineerCodeCheckTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iOSEngineerCodeCheckTests.debug.xcconfig"; path = "Target Support Files/Pods-iOSEngineerCodeCheckTests/Pods-iOSEngineerCodeCheckTests.debug.xcconfig"; sourceTree = "<group>"; };
 		BFD945DB244DC5E80012785A /* iOSEngineerCodeCheck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSEngineerCodeCheck.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		BFD945E7244DC5EB0012785A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BFD945EC244DC5EB0012785A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BFD945F1244DC5EB0012785A /* iOSEngineerCodeCheckTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iOSEngineerCodeCheckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFD945F5244DC5EB0012785A /* iOSEngineerCodeCheckTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSEngineerCodeCheckTests.swift; sourceTree = "<group>"; };
@@ -61,6 +59,9 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		2AB7AAF72E2A1C6000A8606F /* Assets */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Assets; sourceTree = "<group>"; };
+		2AB7AAFB2E2A1C8E00A8606F /* Utilities */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Utilities; sourceTree = "<group>"; };
+		2AB7AAFF2E2A1D7100A8606F /* Extensions */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Extensions; sourceTree = "<group>"; };
 		2ACE6D492E25D949008A6EFA /* Application */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Application; sourceTree = "<group>"; };
 		2ACE6D4A2E25D968008A6EFA /* Controllers */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Controllers; sourceTree = "<group>"; };
 		2ACE6D4B2E25D977008A6EFA /* Models */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Models; sourceTree = "<group>"; };
@@ -133,13 +134,15 @@
 		BFD945DD244DC5E80012785A /* iOSEngineerCodeCheck */ = {
 			isa = PBXGroup;
 			children = (
-				2ACE6D4E2E25D99F008A6EFA /* Services */,
-				2ACE6D4C2E25D983008A6EFA /* Views */,
-				2ACE6D4B2E25D977008A6EFA /* Models */,
-				2ACE6D4A2E25D968008A6EFA /* Controllers */,
 				2ACE6D492E25D949008A6EFA /* Application */,
-				BFD945E7244DC5EB0012785A /* Assets.xcassets */,
+				2AB7AAF72E2A1C6000A8606F /* Assets */,
+				2ACE6D4A2E25D968008A6EFA /* Controllers */,
+				2AB7AAFF2E2A1D7100A8606F /* Extensions */,
 				BFD945EC244DC5EB0012785A /* Info.plist */,
+				2ACE6D4B2E25D977008A6EFA /* Models */,
+				2ACE6D4E2E25D99F008A6EFA /* Services */,
+				2AB7AAFB2E2A1C8E00A8606F /* Utilities */,
+				2ACE6D4C2E25D983008A6EFA /* Views */,
 			);
 			path = iOSEngineerCodeCheck;
 			sourceTree = "<group>";
@@ -197,6 +200,9 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				2AB7AAF72E2A1C6000A8606F /* Assets */,
+				2AB7AAFB2E2A1C8E00A8606F /* Utilities */,
+				2AB7AAFF2E2A1D7100A8606F /* Extensions */,
 				2ACE6D492E25D949008A6EFA /* Application */,
 				2ACE6D4A2E25D968008A6EFA /* Controllers */,
 				2ACE6D4B2E25D977008A6EFA /* Models */,
@@ -298,7 +304,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BFD945E8244DC5EB0012785A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -24,6 +24,13 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
         // Do any additional setup after loading the view.
         searchBar.text = "GitHubのリポジトリを検索できるよー"
         searchBar.delegate = self
+
+        // register our new custom cell
+        tableView.register(UINib(nibName: "RepositoryTableViewCell", bundle: nil), forCellReuseIdentifier: "Repository")
+
+        // Configure table view for automatic cell height based on Auto Layout constraints.
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 156
     }
 
     func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
@@ -98,13 +105,20 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        let cell = UITableViewCell()
-        let repository = repositories[indexPath.row]
-        cell.textLabel?.text = repository.fullName
-        cell.detailTextLabel?.text = repository.language ?? ""
-        cell.tag = indexPath.row
-        return cell
+        // make sure we fetch the RepositoryTableViewCell view cell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "Repository", for: indexPath)
+                as? RepositoryTableViewCell else {
+                    // If the cell cannot be dequeued as RepositoryTableViewCell, something is wrong.
+                    fatalError("The dequeued cell is not an instance of RepositoryTableViewCell.")
+                }
 
+        // Get the corresponding repository object for the current row
+        let repository = repositories[indexPath.row]
+
+        // Configure the cell with the repository data and the API service (for image loading).
+        cell.configure(with: repository, imageService: apiService)
+
+        return cell
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

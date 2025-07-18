@@ -13,6 +13,7 @@ protocol GitHubAPIServiceProtocol {
     var isDebugMode: Bool { get }
     func setDebugMode(enabled: Bool)
     func searchRepositories(query: String) async throws -> GitHubSearchResponse
+    func fetchReadme(owner: String, repoName: String) async throws -> String
     func fetchImage(from url: URL) async throws -> UIImage
     func cancelCurrentSearch()
 }

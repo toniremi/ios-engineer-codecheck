@@ -85,7 +85,7 @@ class RepositoryTableViewCell: UITableViewCell {
         }
 
         // Format and set stargazers count
-        stargazersCountLabel.text = formatStargazersCount(repository.stargazersCount)
+        stargazersCountLabel.text = formatCount(repository.stargazersCount)
 
         // Set language and its corresponding color, or hide if no language
         if let language = repository.language, !language.isEmpty {
@@ -125,23 +125,6 @@ class RepositoryTableViewCell: UITableViewCell {
     }
 
     // MARK: - Helper Methods
-
-    /// Formats a large number of stargazers into a more readable string (e.g., 123k, 1.2M).
-    private func formatStargazersCount(_ count: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal // Use decimal style for thousands separators
-        formatter.maximumFractionDigits = 1 // Allow one decimal place for 'k' or 'M'
-
-        if count >= 1_000_000 {
-            let millions = Double(count) / 1_000_000
-            return (formatter.string(from: NSNumber(value: millions)) ?? "") + "M"
-        } else if count >= 1_000 {
-            let thousands = Double(count) / 1_000
-            return (formatter.string(from: NSNumber(value: thousands)) ?? "") + "k"
-        } else {
-            return formatter.string(from: NSNumber(value: count)) ?? "\(count)"
-        }
-    }
 
     /// Provides a color for a given programming language.
     /// This is a simple example; for a comprehensive solution, consider a dedicated language color manager.

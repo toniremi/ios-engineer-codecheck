@@ -13,10 +13,14 @@ class RepositoryDetailViewController: UIViewController {
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var descriptionLabel: UILabel!
+    @IBOutlet weak var homePageIcon: UIImageView!
     @IBOutlet weak var homePageLabel: UILabel!
     @IBOutlet weak var stargacersLabel: UILabel!
     @IBOutlet weak var watchersLabel: UILabel!
     @IBOutlet weak var forksLabel: UILabel!
+    @IBOutlet weak var defaultBranchLabel: UILabel!
+    @IBOutlet weak var languageColorView: UIView!
+    @IBOutlet weak var languageLabel: UILabel!
 
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var readmeContainerView: UIView!
@@ -40,6 +44,9 @@ class RepositoryDetailViewController: UIViewController {
         // Make the avatar image view circular
         imageView.layer.cornerRadius = imageView.bounds.height / 2
         imageView.clipsToBounds = true // Ensure content is clipped to the rounded corners
+        // make also the language view circular
+        languageColorView.layer.cornerRadius = languageColorView.bounds.height / 2
+        languageColorView.clipsToBounds = true
 
         // display repository details
         displayRepositoryDetails(repository: repository)
@@ -52,13 +59,44 @@ class RepositoryDetailViewController: UIViewController {
     }
 
     func displayRepositoryDetails(repository: Repository) {
+        // set the view controller title
+        self.title = repository.name
         // Populate UI elements directly from the Repository model
-        titleLabel.text = repository.name
+        titleLabel.text = repository.owner?.login ?? repository.name
         descriptionLabel.text = repository.description
-        homePageLabel.text = repository.homepage
+
+        if let homePageLink = repository.homepage, !homePageLink.isEmpty {
+            // user our setAsLink extension
+            homePageLabel.setAsLink(linkText: homePageLink,
+                                                urlString: homePageLink,
+                                                target: self,
+                                                action: #selector(homePageLabelTapped))
+            // make sure the home page link and icon are visible
+            homePageIcon.isHidden = false
+            homePageLabel.isHidden = false
+        } else {
+            homePageIcon.isHidden = true
+            homePageLabel.isHidden = true
+        }
+
+        // add the rest of ui elements
         stargacersLabel.text = formatCount(repository.stargazersCount)
         watchersLabel.text = formatCount(repository.watchersCount)
         forksLabel.text = formatCount(repository.forksCount)
+        defaultBranchLabel.text = repository.defaultBranch
+
+        // language might be optional
+        if let language = repository.language, !language.isEmpty {
+            languageLabel.text = language
+            languageColorView.backgroundColor = LanguageColorProvider.shared.color(for: language)
+            languageLabel.isHidden = false
+            languageColorView.isHidden = false
+        } else {
+            languageLabel.text = nil
+            languageColorView.backgroundColor = .clear
+            languageLabel.isHidden = true
+            languageColorView.isHidden = true
+        }
     }
 
     func getImage() {
@@ -114,5 +152,22 @@ class RepositoryDetailViewController: UIViewController {
         ])
 
         readmeVC.didMove(toParent: self)
+    }
+
+    // Move the tap gesture handler here
+    @objc func homePageLabelTapped() {
+        guard let repository = selectedRepository,
+              let homePageLink = repository.homepage,
+              let url = URL(string: homePageLink) else {
+            print("Error: No valid homepage URL found to open.")
+            return
+        }
+
+        // open the url
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        } else {
+            print("Error: Cannot open URL: \(url.absoluteString)")
+        }
     }
 }

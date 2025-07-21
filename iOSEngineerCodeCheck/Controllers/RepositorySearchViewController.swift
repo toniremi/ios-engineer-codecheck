@@ -19,10 +19,22 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
     // Instantiate your new API service
     private let apiService: GitHubAPIServiceProtocol = GitHubAPIService()
 
+    // MARK: - UI Elements for No Results
+    private lazy var noResultsLabel: UILabel = {
+        let label = UILabel()
+        label.text = "検索結果が見つかりませんでした" // Japanese for "No search results found"
+        label.textColor = .systemGray // A subtle gray color
+        label.textAlignment = .center
+        label.font = UIFont.preferredFont(forTextStyle: .headline) // A slightly larger, bolder font
+        label.numberOfLines = 0 // Allow the text to wrap if it's too long
+        return label
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        searchBar.text = "GitHubのリポジトリを検索できるよー"
+        // user proper placehodler instead of text
+        searchBar.placeholder = "GitHubのリポジトリを検索できるよー"
         searchBar.delegate = self
 
         // register our new custom cell
@@ -31,17 +43,26 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
         // Configure table view for automatic cell height based on Auto Layout constraints.
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 156
+
+        // Initial check: show no results message if the list is empty on load
+        updateNoResultsMessage()
     }
 
     func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
-        // ↓こうすれば初期のテキストを消せる
-        searchBar.text = ""
+        // no need to clear text anymore since we are using placeholder
         return true
     }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         // replace task.cancel with our apiService.cancelCurrentSearch()
         apiService.cancelCurrentSearch()
+
+        // Optionally, clear previous results immediately as user types
+        if !searchText.isEmpty {
+            self.repositories = [] // Clear existing results
+            self.tableView.reloadData() // This will also hide the "no results" label temporarily
+            updateNoResultsMessage() // Ensure background is cleared if results are cleared
+        }
     }
 
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -50,6 +71,9 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
         guard let word = searchBar.text, !word.isEmpty else {
             // Optionally, show an alert to the user that the search term is empty
             print("Search bar text is empty or nil. Not performing search.")
+            self.repositories = [] // Clear results to show "no results" message if search term is empty
+            self.tableView.reloadData()
+            updateNoResultsMessage() // Show message if search input is empty
             return
         }
 
@@ -62,10 +86,14 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
                 let searchResponse = try await apiService.searchRepositories(query: word)
                 self.repositories = searchResponse.items // Assign the array of Repository objects
                 self.tableView.reloadData()
+                updateNoResultsMessage() // Update after data is loaded and table reloaded
             } catch let apiError as APIError {
                 // Handle your custom APIError
                 print("API Error: \(apiError.localizedDescription)")
                 self.showAlert(title: "Search Error", message: apiError.localizedDescription)
+                self.repositories = [] // Clear results on error
+                self.tableView.reloadData() // Reload to reflect empty state
+                updateNoResultsMessage() // Show message on error
             } catch {
                 // Handle task cancellation specifically (important for `textDidChange` cancellation)
                 if let error = error as? URLError, error.code == .cancelled {
@@ -75,7 +103,21 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
                 // Handle any other unexpected errors
                 print("An unexpected error occurred: \(error.localizedDescription)")
                 self.showAlert(title: "Error", message: "An unexpected error occurred: \(error.localizedDescription)")
+                self.repositories = [] // Clear results on unexpected error
+                self.tableView.reloadData() // Reload to reflect empty state
+                updateNoResultsMessage() // Show message on error
             }
+        }
+    }
+
+    // No Results Message Logic
+    private func updateNoResultsMessage() {
+        if repositories.isEmpty {
+            // Show the "No results" label
+            tableView.backgroundView = noResultsLabel
+        } else {
+            // Hide the "No results" label (by setting backgroundView to nil)
+            tableView.backgroundView = nil
         }
     }
 
@@ -108,9 +150,9 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
         // make sure we fetch the RepositoryTableViewCell view cell
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "Repository", for: indexPath)
                 as? RepositoryTableViewCell else {
-                    // If the cell cannot be dequeued as RepositoryTableViewCell, something is wrong.
-                    fatalError("The dequeued cell is not an instance of RepositoryTableViewCell.")
-                }
+            // If the cell cannot be dequeued as RepositoryTableViewCell, something is wrong.
+            fatalError("The dequeued cell is not an instance of RepositoryTableViewCell.")
+        }
 
         // Get the corresponding repository object for the current row
         let repository = repositories[indexPath.row]

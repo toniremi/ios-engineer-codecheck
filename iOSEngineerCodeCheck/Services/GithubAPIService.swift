@@ -308,7 +308,8 @@ class GitHubAPIService: GitHubAPIServiceProtocol {
 
     func fetchReadme(owner: String, repoName: String) async throws -> String {
         // Use URLComponents for robust URL construction
-        guard var urlComponents = URLComponents(string: "https://api.github.com/repos/\(owner)/\(repoName)/readme") else {
+        guard let urlComponents = URLComponents(string: "https://api.github.com/repos/\(owner)/\(repoName)/readme")
+        else {
             throw APIError.invalidURL // This would catch issues with the base URL string
         }
 
@@ -327,7 +328,11 @@ class GitHubAPIService: GitHubAPIServiceProtocol {
         guard readmeResponse.encoding == "base64",
               let decodedData = Data(base64Encoded: cleanedContent),
               let readmeContent = String(data: decodedData, encoding: .utf8) else {
-            throw APIError.decodingError(NSError(domain: "ReadmeDecodingError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to decode README content or unsupported encoding."]))
+            throw APIError.decodingError(NSError(domain: "ReadmeDecodingError",
+                                                 code: 0,
+                                                 userInfo:
+                                                    [NSLocalizedDescriptionKey:
+                                                        "Failed to decode README content or unsupported encoding."]))
         }
 
         // return the decoded readme content

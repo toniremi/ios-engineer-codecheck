@@ -16,7 +16,6 @@ class ReadmeViewController: UIViewController {
     var repositoryName: String?
     var repositoryUrlString: String?
 
-    internal let webView = WKWebView() // Make internal for testing or specific access if needed
     private let apiService: GitHubAPIServiceProtocol = GitHubAPIService()
 
     private var webViewHeightConstraint: NSLayoutConstraint! // Add a property for the height constraint
@@ -32,28 +31,11 @@ class ReadmeViewController: UIViewController {
         super.viewDidLoad()
         // No title needed here as it's embedded
 
-        setupWebView()
+        // webView.backgroundColor = .red
+
+        // setupWebView()
         setupActivityIndicator()
         loadReadmeContent()
-    }
-
-    private func setupWebView() {
-        webView.navigationDelegate = self
-        webView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(webView) // Add webView to ReadmeVC's root view
-
-        NSLayoutConstraint.activate([
-            webView.topAnchor.constraint(equalTo: view.topAnchor),
-            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-
-        // Initialize the height constraint for the webView, which will be updated later
-        // Use a low priority or a minimum height to start, and activate/deactivate as needed
-        webViewHeightConstraint = webView.heightAnchor.constraint(equalToConstant: 1.0)
-        webViewHeightConstraint.priority = .defaultLow // Set a lower priority if it conflicts with parent layout
-        webViewHeightConstraint.isActive = true
     }
 
     private func setupActivityIndicator() {
@@ -74,27 +56,41 @@ class ReadmeViewController: UIViewController {
 
         Task { @MainActor in
             do {
-                apiService.setDebugMode(enabled: true)
-
                 let readmeContent = try await apiService.fetchReadme(owner: owner, repoName: name)
 
-                let down = Down(markdownString: readmeContent)
-                let htmlString = try down.toHTML()
+                let downView = try DownView(frame: self.view.bounds,
+                                            markdownString: readmeContent,
+                                            openLinksInBrowser: true)
 
-                // Load the generated HTML into the WKWebView
-                // Use the repository's HTML URL as baseURL for relative paths (e.g., images)
-                if let repoHtmlUrlString = repositoryUrlString, let baseURL = URL(string: repoHtmlUrlString) {
-                     webView.loadHTMLString(htmlString, baseURL: baseURL)
-                } else {
-                     webView.loadHTMLString(htmlString, baseURL: nil)
-                }
-
+                // set autoresizing mask to false
+                downView.translatesAutoresizingMaskIntoConstraints = false
+                // setup the downView web view navigation delegate
+                downView.navigationDelegate = self
+                // add our downView
+                view.addSubview(downView)
+                // setup downView constraints
+                constrain(subview: downView)
             } catch {
                 print("Error loading or rendering README: \(error.localizedDescription)")
                 // Optionally show an alert or error state within the ReadmeVC itself
             }
             // activityIndicator.stopAnimating() // Will stop in didFinishNavigation
         }
+    }
+
+    func constrain(subview: UIView, bottomAnchor: NSLayoutYAxisAnchor? = nil) {
+            NSLayoutConstraint.activate([
+                subview.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                subview.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                subview.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                subview.bottomAnchor.constraint(equalTo: bottomAnchor ?? view.safeAreaLayoutGuide.bottomAnchor)
+            ])
+
+        // Initialize the height constraint for the webView, which will be updated later
+        // Use a low priority or a minimum height to start, and activate/deactivate as needed
+        webViewHeightConstraint = subview.heightAnchor.constraint(equalToConstant: 1.0)
+        webViewHeightConstraint.priority = .defaultLow // Set a lower priority if it conflicts with parent layout
+        webViewHeightConstraint.isActive = true
     }
 }
 
@@ -135,8 +131,10 @@ extension ReadmeViewController: WKNavigationDelegate {
     }
 
     // Handle external links: Open them in Safari instead of within the embedded WKWebView
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        if navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url {
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if navigationAction.navigationType == .linkActivated,
+            let url = navigationAction.request.url {
             if UIApplication.shared.canOpenURL(url) {
                 UIApplication.shared.open(url)
                 decisionHandler(.cancel) // Cancel navigation in current webView

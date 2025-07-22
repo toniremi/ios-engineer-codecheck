@@ -44,6 +44,9 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 156
 
+        // dismiss keboard
+        tableView.keyboardDismissMode = .onDrag
+
         // Initial check: show no results message if the list is empty on load
         updateNoResultsMessage()
     }

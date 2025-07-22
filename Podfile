@@ -10,6 +10,9 @@ target 'iOSEngineerCodeCheck' do
   # SwiftLint so we can add linter from the start
   pod 'SwiftLint'
 
+  # Markdown rendering in Swift
+  pod 'Down'
+
   target 'iOSEngineerCodeCheckTests' do
     inherit! :search_paths
     # Pods for testing

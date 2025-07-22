@@ -306,6 +306,22 @@ class GitHubAPIService: GitHubAPIServiceProtocol {
         }
     }
 
+    func fetchRepositories(forOwner ownerLogin: String) async throws -> [Repository] {
+        // Use URLComponents for robust URL construction
+        guard let urlComponents = URLComponents(string: "https://api.github.com/orgs/\(ownerLogin)/repos")
+        else {
+            throw APIError.invalidURL // This would catch issues with the base URL string
+        }
+
+        guard let url = urlComponents.url else {
+            // This would catch scenarios where urlComponents cannot form a valid URL from its parts
+            throw APIError.invalidURL
+        }
+
+        // execute the request
+        return try await performRequest(url: url)
+    }
+
     func fetchReadme(owner: String, repoName: String) async throws -> String {
         // Use URLComponents for robust URL construction
         guard let urlComponents = URLComponents(string: "https://api.github.com/repos/\(owner)/\(repoName)/readme")

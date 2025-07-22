@@ -309,11 +309,34 @@
                         <outlet property="stargacersLabel" destination="v5R-da-1nw" id="vEM-EO-uCg"/>
                         <outlet property="titleLabel" destination="4q1-pG-WSB" id="UQ0-5D-rWe"/>
                         <outlet property="watchersLabel" destination="7f0-NE-FJn" id="9JJ-Pf-PYF"/>
+                        <segue destination="Mqe-J4-9eZ" kind="show" identifier="toOwnerRepositories" id="nnZ-cX-rfU"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="rj0-Ld-RTn" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="228.98550724637684" y="136.60714285714286"/>
+        </scene>
+        <!--Owner Repositories View Controller-->
+        <scene sceneID="ke9-xZ-Mzg">
+            <objects>
+                <tableViewController id="Mqe-J4-9eZ" customClass="OwnerRepositoriesViewController" customModule="iOSEngineerCodeCheck" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" id="Gge-Ck-CdY">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <connections>
+                            <outlet property="dataSource" destination="Mqe-J4-9eZ" id="JnL-sy-CLa"/>
+                            <outlet property="delegate" destination="Mqe-J4-9eZ" id="Sng-bW-V3A"/>
+                        </connections>
+                    </tableView>
+                    <navigationItem key="navigationItem" id="SHZ-D2-gVH"/>
+                    <connections>
+                        <segue destination="AHY-RL-7mG" kind="show" identifier="Detail" id="gZm-2s-tSC"/>
+                    </connections>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="agb-xx-Wkn" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="965" y="137"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="hWi-qa-NBR">
@@ -332,6 +355,9 @@
             <point key="canvasLocation" x="-1417" y="137"/>
         </scene>
     </scenes>
+    <inferredMetricsTieBreakers>
+        <segue reference="qqd-8W-4W1"/>
+    </inferredMetricsTieBreakers>
     <resources>
         <image name="binoculars.fill" catalog="system" width="128" height="90"/>
         <image name="flowchart.fill" catalog="system" width="128" height="126"/>

@@ -31,7 +31,6 @@ struct Repository: Codable {
     let forksCount: Int
     let openIssuesCount: Int
     let defaultBranch: String
-    let score: Double
     let license: License? // License can be null
 
     enum CodingKeys: String, CodingKey {
@@ -56,7 +55,6 @@ struct Repository: Codable {
         case forksCount
         case openIssuesCount
         case defaultBranch
-        case score
         case license
     }
 }

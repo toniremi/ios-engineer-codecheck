@@ -1,5 +1,5 @@
 //
-//  ViewController2.swift
+//  RepositoryDetailViewController.swift
 //  iOSEngineerCodeCheck
 //
 //  Created by 史 翔新 on 2020/04/21.
@@ -26,7 +26,7 @@ class RepositoryDetailViewController: UIViewController {
     @IBOutlet weak var readmeContainerView: UIView!
 
     // instead of holding the whole vc1 reference only the data needed
-    var selectedRepository: Repository? // Holds the dictionary for the selected repo
+    var selectedRepository: Repository?
 
     // Make apiService a lazy var. If it's set by injection in prepare(for:),
     // that value will be used. Otherwise, a new instance is created on first access.
@@ -48,6 +48,17 @@ class RepositoryDetailViewController: UIViewController {
         languageColorView.layer.cornerRadius = languageColorView.bounds.height / 2
         languageColorView.clipsToBounds = true
 
+        // Enable user interaction for the imageView and titleLabel
+        imageView.isUserInteractionEnabled = true
+        titleLabel.isUserInteractionEnabled = true
+
+        // Add tap gesture recognizers to load the owners repository list
+        let imageTapGesture = UITapGestureRecognizer(target: self, action: #selector(ownerTapped))
+        imageView.addGestureRecognizer(imageTapGesture)
+
+        let titleLabelTapGesture = UITapGestureRecognizer(target: self, action: #selector(ownerTapped))
+        titleLabel.addGestureRecognizer(titleLabelTapGesture)
+
         // display repository details
         displayRepositoryDetails(repository: repository)
 
@@ -68,9 +79,9 @@ class RepositoryDetailViewController: UIViewController {
         if let homePageLink = repository.homepage, !homePageLink.isEmpty {
             // user our setAsLink extension
             homePageLabel.setAsLink(linkText: homePageLink,
-                                                urlString: homePageLink,
-                                                target: self,
-                                                action: #selector(homePageLabelTapped))
+                                    urlString: homePageLink,
+                                    target: self,
+                                    action: #selector(homePageLabelTapped))
             // make sure the home page link and icon are visible
             homePageIcon.isHidden = false
             homePageLabel.isHidden = false
@@ -168,6 +179,32 @@ class RepositoryDetailViewController: UIViewController {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         } else {
             print("Error: Cannot open URL: \(url.absoluteString)")
+        }
+    }
+
+    // New tap handler for imageView and titleLabel
+    @objc func ownerTapped() {
+        // Ensure we have the owner's login before performing the segue
+        guard let ownerLogin = selectedRepository?.owner?.login else {
+            print("Error: Owner login not available for segue.")
+            return
+        }
+
+        // Perform the segue to the OwnerRepositoriesViewController
+        // Make sure you have a segue with this identifier in your Storyboard
+        performSegue(withIdentifier: "toOwnerRepositories", sender: ownerLogin)
+    }
+
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // First, check if this is the segue for the owner's repositories
+        if segue.identifier == "toOwnerRepositories" {
+            // Safely cast the destination view controller
+            if let destinationVC = segue.destination as? OwnerRepositoriesViewController,
+               let selectedRepository = selectedRepository,
+               let ownerLogin = selectedRepository.owner?.login {
+                // pass the owner login
+                destinationVC.owner = ownerLogin
+            }
         }
     }
 }

@@ -1,23 +1,27 @@
 //
-//  RepositorySearchViewController.swift
+//  OwnerRepositoriesViewController.swift
 //  iOSEngineerCodeCheck
 //
-//  Created by 史 翔新 on 2020/04/20.
-//  Copyright © 2020 YUMEMI Inc. All rights reserved.
+//  Created by Antoni Remeseiro Alfonso on 2025/07/22.
+//  Copyright © 2025 YUMEMI Inc. All rights reserved.
 //
 
 import UIKit
 
-class RepositorySearchViewController: UITableViewController, UISearchBarDelegate {
+class OwnerRepositoriesViewController: UITableViewController {
 
-    @IBOutlet weak var searchBar: UISearchBar!
+    // the owner selected to list all of its repositories
+    var owner: String?
 
+    // our list of repositories
     var repositories: [Repository] = []
 
+    // selected repository so we can load details
     var selectedRepositoryIndex: Int?
 
-    // Instantiate your new API service
-    private let apiService: GitHubAPIServiceProtocol = GitHubAPIService()
+    // Make apiService a lazy var. If it's set by injection in prepare(for:),
+    // that value will be used. Otherwise, a new instance is created on first access.
+    lazy var apiService: GitHubAPIServiceProtocol = GitHubAPIService()
 
     // activity indicator
     private lazy var activityIndicator: UIActivityIndicatorView = {
@@ -49,9 +53,15 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        // user proper placehodler instead of text
-        searchBar.placeholder = "GitHubのリポジトリを検索できるよー"
-        searchBar.delegate = self
+
+        // use guard let to safely unwrap the selected repository data
+        guard let ownerLogin = owner else {
+            print("Error: owner was not set.")
+            return
+        }
+
+        // set the title to be the ownerLogin
+        self.title = ownerLogin
 
         // register our new custom cell
         tableView.register(UINib(nibName: "RepositoryTableViewCell", bundle: nil), forCellReuseIdentifier: "Repository")
@@ -63,43 +73,37 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
         // dismiss keboard
         tableView.keyboardDismissMode = .onDrag
 
-        // Initial check: show no results message if the list is empty on load
+        // Initial state setup: Ensure background is set correctly
         updateTableViewBackgroundView()
+
+        // fetch the repositories for this owner
+        fetchOwnerRepositories(owner: ownerLogin)
     }
 
-    func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
-        // no need to clear text anymore since we are using placeholder
-        return true
-    }
-
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        // replace task.cancel with our apiService.cancelCurrentSearch()
-        apiService.cancelCurrentSearch()
-
-        // Optionally, clear previous results immediately as user types
-        if !searchText.isEmpty {
-            self.repositories = [] // Clear existing results
-            self.tableView.reloadData() // This will also hide the "no results" label temporarily
-            self.isLoading = false // stop loading
+    private func updateTableViewBackgroundView() {
+        if isLoading {
+            // If loading, show the activity indicator
+            tableView.backgroundView = activityIndicator
+            activityIndicator.startAnimating()
+            noResultsLabel.isHidden = true // Ensure label is hidden if it was visible
+        } else if repositories.isEmpty {
+            // If not loading and no repositories, show the "no results" label
+            tableView.backgroundView = noResultsLabel
+            activityIndicator.stopAnimating()
+            noResultsLabel.isHidden = false // Ensure label is visible
+        } else {
+            // If there are repositories, hide both (default table view content shows)
+            tableView.backgroundView = nil
+            activityIndicator.stopAnimating()
+            noResultsLabel.isHidden = true // Ensure label is hidden
         }
     }
 
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        // Safely unwrap searchBar.text. If nil or empty, don't proceed with search.
-        // Also, use 'isEmpty' for checking empty strings.
-        guard let word = searchBar.text, !word.isEmpty else {
-            // Optionally, show an alert to the user that the search term is empty
-            print("Search bar text is empty or nil. Not performing search.")
-            self.repositories = [] // Clear results to show "no results" message if search term is empty
-            self.tableView.reloadData()
-            return
-        }
-
-        // Start loading state, which will show the activity indicator
-        self.isLoading = true
-
-        // Cancel any ongoing search before starting a new one (important for button-triggered search too)
-        apiService.cancelCurrentSearch()
+    func fetchOwnerRepositories(owner: String) {
+        // Clear existing results immediately before starting a new fetch
+        self.repositories = []
+        self.tableView.reloadData() // Refresh table to show cleared state / spinner
+        self.isLoading = true // Start loading state, which will show the activity indicator
 
         // Use @MainActor to ensure UI updates are on the main thread
         Task { @MainActor in
@@ -107,8 +111,7 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
             defer { self.isLoading = false }
 
             do {
-                let searchResponse = try await apiService.searchRepositories(query: word)
-                self.repositories = searchResponse.items // Assign the array of Repository objects
+                self.repositories = try await apiService.fetchRepositories(forOwner: owner)
                 self.tableView.reloadData()
             } catch let apiError as APIError {
                 // Handle your custom APIError
@@ -128,26 +131,6 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
                 self.repositories = [] // Clear results on unexpected error
                 self.tableView.reloadData() // Reload to reflect empty state
             }
-        }
-    }
-
-    // No Results Message Logic
-    private func updateTableViewBackgroundView() {
-        if isLoading {
-            // If loading, show the activity indicator
-            tableView.backgroundView = activityIndicator
-            activityIndicator.startAnimating()
-            noResultsLabel.isHidden = true // Ensure label is hidden if it was visible
-        } else if repositories.isEmpty {
-            // If not loading and no repositories, show the "no results" label
-            tableView.backgroundView = noResultsLabel
-            activityIndicator.stopAnimating()
-            noResultsLabel.isHidden = false // Ensure label is visible
-        } else {
-            // If there are repositories, hide both (default table view content shows)
-            tableView.backgroundView = nil
-            activityIndicator.stopAnimating()
-            noResultsLabel.isHidden = true // Ensure label is hidden
         }
     }
 
@@ -194,10 +177,7 @@ class RepositorySearchViewController: UITableViewController, UISearchBarDelegate
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        // 画面遷移時に呼ばれる
         selectedRepositoryIndex = indexPath.row
         performSegue(withIdentifier: "Detail", sender: self)
-
     }
-
 }
